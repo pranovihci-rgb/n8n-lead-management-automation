@@ -1,0 +1,979 @@
+{
+  "name": "Lead Management Automation - Portfolio Template",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        368
+      ],
+      "id": "c2b628f0-459d-4d88-9124-1df24f918e02",
+      "name": "Webhook",
+      "webhookId": "REGENERATED_BY_N8N"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0600a56d-1d26-455b-8f94-ddf8f255a2e4",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "d4ce6019-f32b-4120-bbd2-0da5f319332d",
+              "name": "phone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "d965b3c0-f14a-47d0-827f-cff356bebe10",
+              "name": "repair_type",
+              "value": "={{ $json.body.repair_type }}",
+              "type": "string"
+            },
+            {
+              "id": "88ce1298-64d8-4a36-b92a-00fea2bc7b54",
+              "name": "budget",
+              "value": "={{ $json.body.budget }}",
+              "type": "string"
+            },
+            {
+              "id": "472accc8-556d-4225-9abb-5b4c74ea1b03",
+              "name": "comment",
+              "value": "={{ $json.body.comment }}",
+              "type": "string"
+            },
+            {
+              "id": "a016acdc-7a58-42d0-b9e8-9ffed5fecf65",
+              "name": "created_at",
+              "value": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "type": "string"
+            },
+            {
+              "id": "81d1c619-173d-482f-98e3-11329d26fd71",
+              "name": "lead_id",
+              "value": "={{ 'LEAD-' + $now.toFormat('yyyyMMdd-HHmmss') }}",
+              "type": "string"
+            },
+            {
+              "id": "b767e65b-4433-45ff-b022-f421cae2d8ef",
+              "name": "status",
+              "value": "={{\n  !String($json.body.name ?? '').trim() ||\n  String($json.body.phone ?? '').replace(/\\D/g, '').length < 9 ||\n  String($json.body.phone ?? '').replace(/\\D/g, '').length > 15 ||\n  String($json.body.budget ?? '').trim() === '' ||\n  isNaN(Number($json.body.budget))\n    ? 'INVALID'\n    : Number($json.body.budget) >= 30000\n      ? 'HOT'\n      : 'NEW'\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        368
+      ],
+      "id": "20919986-99fe-4982-95ad-61e2461a8dc3",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $json.phone }}",
+            "repair_type": "={{ $json.repair_type }}",
+            "budget": "={{ $json.budget }}",
+            "comment": "={{ $json.comment }}",
+            "name": "={{ $json.name }}",
+            "created_at": "={{ $json.created_at }}",
+            "lead_id": "={{ $json.lead_id }}",
+            "status": "={{ $json.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        368
+      ],
+      "id": "d8e463b9-5e30-47ff-9c84-beda48221ab1",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fe875179-3b85-4766-8aed-569a935a62d7",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "HOT",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        464
+      ],
+      "id": "00371858-086f-4d78-b90f-0497d5778946",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8b1c3319-096d-4193-9735-8838e2afc9e0",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "INVALID",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        368
+      ],
+      "id": "f61dcd3e-f60b-4db7-8724-3cf6718da630",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{\n  {\n    success: true,\n    lead_id: $('Edit Fields').item.json.lead_id,\n    status: $('Edit Fields').item.json.status,\n    message: 'Заявка успешно принята'\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1344,
+        368
+      ],
+      "id": "c43fb6ab-e8fb-478e-8f95-5cabdb3a07f0",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{\n  {\n    success: false,\n    lead_id: $('Edit Fields').item.json.lead_id,\n    status: $('Edit Fields').item.json.status,\n    message: 'Проверьте введенные данные'\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1120,
+        176
+      ],
+      "id": "bf06b168-7ca5-4a5a-9907-e31e41dfe42b",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{\n  {\n    success: true,\n    lead_id: $('Edit Fields').item.json.lead_id,\n    status: $('Edit Fields').item.json.status,\n    message: 'Заявка успешно принята'\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1344,
+        560
+      ],
+      "id": "c47be464-3a4b-404e-88fc-b65375910212",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🔥 HOT LEAD  \n👤 Имя: {{ $json.name}}\n📞 Телефон: {{ $json.phone }} \n🏠 Тип ремонта: {{ $json.repair_type }} \n💰 Бюджет: {{ $json.budget }} PLN \n💬 Комментарий: {{ $json.comment }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Взять в работу",
+                    "additionalFields": {
+                      "callback_data": "=TAKE_{{ $json.lead_id }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Отклонить",
+                    "additionalFields": {
+                      "callback_data": "=REJECT_{{ $json.lead_id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        368
+      ],
+      "id": "ee8c5382-e4fd-453e-bf02-319941992d0a",
+      "name": "HOT LEAD ",
+      "credentials": {
+        "telegramApi": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=⚠️ НЕПОЛНАЯ / НЕКОРРЕКТНАЯ ЗАЯВКА\n\n👤 Имя: {{ $json['name'] || 'НЕ УКАЗАН' }}\n📞 Телефон: {{ $json.phone || 'НЕ УКАЗАН' }}\n🏠 Тип ремонта: {{ $json.repair_type || 'НЕ УКАЗАН' }}\n💰 Бюджет: {{ (!$json.budget || isNaN(Number($json.budget))) ? 'НЕ УКАЗАН ИЛИ НЕКОРРЕКТЕН' : $json.budget + ' PLN' }}\n💬 Комментарий: {{ $json.comment || 'НЕТ КОММЕНТАРИЯ' }}\n\n❗ Проверь данные и свяжись с клиентом.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        176
+      ],
+      "id": "5f625ed3-0ca4-4719-aad2-4af775b9d272",
+      "name": "INVALID LEAD",
+      "credentials": {
+        "telegramApi": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🟢 NEW LEAD\n👤 Имя: {{ $json.name}}\n📞 Телефон: {{ $json.phone }}\n🏠 Тип ремонта: {{ $json.repair_type }}\n💰 Бюджет: {{ $json.budget }} PLN\n💬 Комментарий: {{ $json.comment }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        560
+      ],
+      "id": "20da1443-3bdb-45ab-a943-fc3834206f19",
+      "name": "NEW LEAD",
+      "credentials": {
+        "telegramApi": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        -144
+      ],
+      "id": "33bf967e-7bf3-4097-b093-0408b0496881",
+      "name": "Telegram Trigger",
+      "credentials": {
+        "telegramApi": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -336
+      ],
+      "id": "69122d40-a4e5-4739-bdb6-f3f6357fd5de",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5aa5d842-d965-4de9-9166-74a4f7c582e0",
+              "name": "lead_id",
+              "value": "={{ $json.callback_query.data.replace('TAKE_', '').replace('REJECT_', '') }}",
+              "type": "string"
+            },
+            {
+              "id": "4f7c64e5-2966-4587-9906-49a9f0c24a51",
+              "name": "action",
+              "value": "={{ $json.callback_query.data.split('_')[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        -144
+      ],
+      "id": "a83938be-6d87-44af-a0d3-42d1c758e746",
+      "name": "Parse Callback"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        -144
+      ],
+      "id": "5c80afa2-1cf2-4a36-b825-d73d22bdc456",
+      "name": "Find Lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "029b3661-62e2-4ba2-a8e9-1de82fe38490",
+              "leftValue": "={{ String($json.manager_status ?? '').trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        -144
+      ],
+      "id": "4cdeda0a-0044-4d94-8920-0b32e7caaa06",
+      "name": "Check Already Processed"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Parse Callback').item.json.action }}",
+                    "rightValue": "TAKE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2f4a4152-247b-4bd7-8665-c1e70e4bc0eb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TAKE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9d0680f6-4bd1-4d73-8cf5-9e65be9d80cc",
+                    "leftValue": "={{ $('Parse Callback').item.json.action }}",
+                    "rightValue": "REJECT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "REJECT"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        -240
+      ],
+      "id": "78247ee9-154d-4299-afb7-02f7a6f35008",
+      "name": "Route Action"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.lead_id }}",
+            "manager_status": "IN_PROGRESS",
+            "updated_at": "={{ $now.setZone('Europe/Warsaw').toFormat('dd.MM.yyyy HH:mm') }}",
+            "manager_name": "={{ $('Telegram Trigger').item.json.callback_query.from.first_name }}",
+            "manager_username": "={{ $('Telegram Trigger').item.json.callback_query.from.username || '' }}",
+            "manager_id": "={{ $('Telegram Trigger').item.json.callback_query.from.id }}"
+          },
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        -336
+      ],
+      "id": "af57ceb4-8368-4d2d-9370-7591e310a7b4",
+      "name": "Set IN_PROGRESS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.lead_id }}",
+            "manager_status": "REJECTED",
+            "updated_at": "={{ $now.setZone('Europe/Warsaw').toFormat('dd.MM.yyyy HH:mm') }}",
+            "manager_name": "={{ $('Telegram Trigger').item.json.callback_query.from.first_name }}",
+            "manager_username": "={{ $('Telegram Trigger').item.json.callback_query.from.username || '' }}",
+            "manager_id": "={{ $('Telegram Trigger').item.json.callback_query.from.id }}"
+          },
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -144
+      ],
+      "id": "795ba359-a75a-4353-b67b-5dd75fae66bf",
+      "name": "Set REJECTED",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Telegram Trigger').item.json.callback_query.id }}",
+        "additionalFields": {
+          "text": "✅ Лид взят в работу"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        -336
+      ],
+      "id": "54f4d9c8-5654-4869-9201-921c3dce6cc4",
+      "name": "Confirm TAKE",
+      "credentials": {
+        "telegramApi": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Telegram Trigger').item.json.callback_query.id }}",
+        "additionalFields": {
+          "text": "={{ $json.manager_status === 'IN_PROGRESS' ? `⚠️ Лид уже взял ${$json.manager_name || 'другой менеджер'}` : '⚠️ Этот лид уже отклонён' }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        -48
+      ],
+      "id": "d6b56f88-b9ed-401c-a07c-4152b505da00",
+      "name": "Already Processed Alert",
+      "credentials": {
+        "telegramApi": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Telegram Trigger').item.json.callback_query.message.chat.id }}",
+        "messageId": "={{ $('Telegram Trigger').item.json.callback_query.message.message_id }}",
+        "text": "={{ \n$('Telegram Trigger').item.json.callback_query.message.text\n+ '\\n\\n────────────'\n+ '\\n✅ В РАБОТЕ'\n+ '\\n👨‍💼 Менеджер: ' + $('Telegram Trigger').item.json.callback_query.from.first_name\n+ '\\n🕐 Взято: ' + $now.setZone('Europe/Warsaw').toFormat('dd.MM.yyyy HH:mm')\n}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1792,
+        -336
+      ],
+      "id": "80cd5c37-c3e6-439b-89d3-576023f3a92e",
+      "name": "Mark As In Progress",
+      "credentials": {
+        "telegramApi": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Telegram Trigger').item.json.callback_query.message.chat.id }}",
+        "messageId": "={{ $('Telegram Trigger').item.json.callback_query.message.message_id }}",
+        "text": "={{ \n$('Telegram Trigger').item.json.callback_query.message.text\n+ '\\n\\n────────────'\n+ '\\n❌ ОТКЛОНЕНО'\n+ '\\n👨‍💼 Менеджер: ' + $('Telegram Trigger').item.json.callback_query.from.first_name\n+ '\\n🕐 Отклонено: ' + $now.setZone('Europe/Warsaw').toFormat('dd.MM.yyyy HH:mm')\n}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        -144
+      ],
+      "id": "981104d0-7b01-4e63-9dac-5629448c4c76",
+      "name": "Mark As Rejected",
+      "credentials": {
+        "telegramApi": {
+          "id": "RECONNECT_IN_N8N",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HOT LEAD ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NEW LEAD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "INVALID LEAD",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HOT LEAD ": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "INVALID LEAD": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NEW LEAD": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Set IN_PROGRESS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Callback": {
+      "main": [
+        [
+          {
+            "node": "Find Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Lead": {
+      "main": [
+        [
+          {
+            "node": "Check Already Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Already Processed": {
+      "main": [
+        [
+          {
+            "node": "Route Action",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Processed Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Action": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set REJECTED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set IN_PROGRESS": {
+      "main": [
+        [
+          {
+            "node": "Confirm TAKE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set REJECTED": {
+      "main": [
+        [
+          {
+            "node": "Mark As Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm TAKE": {
+      "main": [
+        [
+          {
+            "node": "Mark As In Progress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}
